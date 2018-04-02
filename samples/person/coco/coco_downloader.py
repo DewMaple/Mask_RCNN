@@ -11,6 +11,7 @@ pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
 def download_person_dataset(dataset_dir=".", year=2017):
+    # download(dataset_dir, 'train', year, ['person'])
     download(dataset_dir, 'val', year, ['person'])
 
 
@@ -60,10 +61,10 @@ def download(data_dir, subset, year, cat_nms):
 
     print('save dataset to {}.'.format(subset_dir))
 
-    # copy_files(coco, img_ids[:500], subset_dir, 'dataset/person/val')
-    # create_annotation(coco, img_ids[:500], 'dataset/person/val')
-    download_from_coco(coco, image_ids=img_ids, tar_dir=subset_dir)
-    create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir)
+    copy_files(coco, img_ids[:100], subset_dir, 'dataset/person/' + subset)
+    create_annotation(coco, img_ids[:100], 'dataset/person/' + subset, cat_ids=cat_ids)
+    # download_from_coco(coco, image_ids=img_ids, tar_dir=subset_dir)
+    # create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir, cat_ids=cat_ids)
 
 
 def _shape_coco_2_vgg(ann, coco):
@@ -81,15 +82,22 @@ def _shape_coco_2_vgg(ann, coco):
     #   'size': 100202
     # }
     segs = ann['segmentation']
+    print(ann)
 
     regions = {}
+    import numpy as np
     for i, seg in enumerate(segs):
-        idx = int(len(seg) / 2)
+        if type(seg) is not list:
+            continue
+        poly = np.array(seg).reshape((int(len(seg) / 2), 2))
+        polygon = pylab.Polygon(poly)
+        xy = polygon.get_xy()
+
         regions[i] = {
             'region_attributes': {},
             'shape_attributes': {
-                'all_points_x': seg[0:idx],
-                'all_points_y': seg[idx:],
+                'all_points_x': xy[:, 0].tolist(),
+                'all_points_y': xy[:, 1].tolist(),
                 'name': 'polygon'
             }
         }
@@ -103,8 +111,8 @@ def _shape_coco_2_vgg(ann, coco):
     }
 
 
-def create_annotation(coco, image_ids, tar_dir):
-    ann_ids = coco.getAnnIds(imgIds=image_ids)
+def create_annotation(coco, image_ids, tar_dir, cat_ids):
+    ann_ids = coco.getAnnIds(imgIds=image_ids, catIds=cat_ids)
     print('img_ids len is {}'.format(len(image_ids)))
     print('ann len is {}'.format(len(ann_ids)))
     anns = coco.loadAnns(ann_ids)
