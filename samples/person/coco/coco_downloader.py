@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+import threading
 import time
 
 import pylab
@@ -9,7 +11,40 @@ pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
 def download_person_dataset(dataset_dir=".", year=2017):
-    download(dataset_dir, 'train', year, ['person'])
+    download(dataset_dir, 'val', year, ['person'])
+
+
+def copy_files(coco, image_ids, src_dir, tar_dir):
+    images = coco.loadImgs(image_ids)
+    for im in images:
+        shutil.copy(os.path.join(src_dir, im['file_name']), tar_dir)
+
+
+def download_from_coco(coco, image_ids, tar_dir):
+    count = 0
+    while True:
+        try:
+            coco.download(tarDir=tar_dir, imgIds=image_ids)
+            break
+        except Exception as e:
+            count += 1
+            print(e)
+            print("Retry {} times".format(count))
+        time.sleep(60)
+    print("{} data downloaded, {} images. ".format(tar_dir, len(image_ids)))
+
+
+def multi_thread_downloader(coco, image_ids, tar_dir, threads_num=1):
+    class CocoDownloader(threading.Thread):
+        def __init__(self, coco, image_ids, tar_dir, thread_id):
+            threading.Thread.__init__(self)
+            self.coco = coco
+            self.image_ids = image_ids
+            self.tar_dir = tar_dir
+            self.thread_id = thread_id
+
+        def run(self):
+            print("Thread {} is running".format(self.thread_id))
 
 
 def download(data_dir, subset, year, cat_nms):
@@ -22,21 +57,13 @@ def download(data_dir, subset, year, cat_nms):
 
     subset_dir = os.path.join(data_dir, subset)
     os.makedirs(subset_dir, exist_ok=True)
+
     print('save dataset to {}.'.format(subset_dir))
-    count = 0
 
-    while True:
-        try:
-            coco.download(tarDir=subset_dir, imgIds=img_ids)
-            break
-        except Exception as e:
-            count += 1
-            print(e)
-            print("Retry {} times".format(count))
-        time.sleep(60)
-    print("{} data downloaded, {} images. ".format(subset, len(img_ids)))
-
-    create_annotation(subset_dir, coco, img_ids)
+    # copy_files(coco, img_ids[:500], subset_dir, 'dataset/person/val')
+    # create_annotation(coco, img_ids[:500], 'dataset/person/val')
+    download_from_coco(coco, image_ids=img_ids, tar_dir=subset_dir)
+    create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir)
 
 
 def _shape_coco_2_vgg(ann, coco):
@@ -76,9 +103,9 @@ def _shape_coco_2_vgg(ann, coco):
     }
 
 
-def create_annotation(tar_dir, coco, img_ids):
-    ann_ids = coco.getAnnIds(imgIds=img_ids)
-    print('img_ids len is {}'.format(len(img_ids)))
+def create_annotation(coco, image_ids, tar_dir):
+    ann_ids = coco.getAnnIds(imgIds=image_ids)
+    print('img_ids len is {}'.format(len(image_ids)))
     print('ann len is {}'.format(len(ann_ids)))
     anns = coco.loadAnns(ann_ids)
     annotations = []

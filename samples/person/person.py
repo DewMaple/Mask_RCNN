@@ -7,6 +7,7 @@ import numpy as np
 import skimage.draw
 # Root directory of the project
 import skimage.io
+from img_utils.files import images_in_dir
 
 ROOT_DIR = os.getcwd()
 if ROOT_DIR.endswith("samples/person"):
@@ -163,12 +164,24 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
     print("Saved to ", file_name)
 
 
+def valid_images(image_dir):
+    images = images_in_dir(image_dir)
+    invalid = []
+    for im in images:
+        try:
+            image = skimage.io.imread(im)
+        except Exception as e:
+            invalid.append(im)
+
+    print('invalid images: {}'.format(invalid))
+
+
 if __name__ == '__main__':
     import argparse
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Train Mask R-CNN to detect balloons.')
-    parser.add_argument("command", metavar="<command>", help="'train' or 'splash'")
+    parser.add_argument("command", metavar="<command>", help="'train' or 'splash' or 'valid' ")
     parser.add_argument('--dataset', required=False, metavar="/path/to/person/dataset/",
                         help='Directory of the Person dataset')
     parser.add_argument('--weights', required=True, metavar="/path/to/weights.h5",
@@ -186,7 +199,10 @@ if __name__ == '__main__':
         assert args.dataset, "Argument --dataset is required for training"
     elif args.command == "splash":
         assert args.image or args.video, "Provide --image or --video to apply color splash"
-
+    elif args.command == 'valid':
+        assert args.dataset, "Argument --dataset is required for training"
+        valid_images(args.dataset)
+        exit(0)
     print("Weights: ", args.weights)
     print("Dataset: ", args.dataset)
     print("Logs: ", args.logs)

@@ -6,3 +6,4 @@ mask_rcnn_balloon.h5
 output/
 samples/person/coco/*/
 dataset/
+logs/
