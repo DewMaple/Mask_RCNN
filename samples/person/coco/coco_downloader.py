@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -8,7 +9,7 @@ pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
 def download_person_dataset(dataset_dir=".", year=2017):
-    download(dataset_dir, 'val', year, ['person'])
+    download(dataset_dir, 'train', year, ['person'])
 
 
 def download(data_dir, subset, year, cat_nms):
@@ -32,10 +33,10 @@ def download(data_dir, subset, year, cat_nms):
             count += 1
             print(e)
             print("Retry {} times".format(count))
-        time.sleep(30)
+        time.sleep(60)
     print("{} data downloaded, {} images. ".format(subset, len(img_ids)))
 
-    create_annotation(subset_dir, coco, cat_ids)
+    create_annotation(subset_dir, coco, img_ids)
 
 
 def _shape_coco_2_vgg(ann, coco):
@@ -56,8 +57,7 @@ def _shape_coco_2_vgg(ann, coco):
 
     regions = {}
     for i, seg in enumerate(segs):
-        idx = len(seg)/2
-
+        idx = int(len(seg) / 2)
         regions[i] = {
             'region_attributes': {},
             'shape_attributes': {
@@ -68,18 +68,25 @@ def _shape_coco_2_vgg(ann, coco):
         }
 
     img_id = ann['image_id']
-    # coco.loadImgs
-def create_annotation(tar_dir, coco, cat_ids):
-    ann_ids = coco.getAnnIds(catIds=cat_ids)
+    img = coco.loadImgs(img_id)[0]
+    return {
+        'filename': img['file_name'],
+        'regions': regions,
+        'size': img['height'] * img['width']
+    }
+
+
+def create_annotation(tar_dir, coco, img_ids):
+    ann_ids = coco.getAnnIds(imgIds=img_ids)
+    print('img_ids len is {}'.format(len(img_ids)))
+    print('ann len is {}'.format(len(ann_ids)))
     anns = coco.loadAnns(ann_ids)
     annotations = []
-    count = 0
     for ann in anns:
+        annotations.append(_shape_coco_2_vgg(ann, coco))
 
-        if count < 3:
-            print(ann)
-            print(coco.annToRLE(ann))
-        count += 1
+    with open(os.path.join(tar_dir, 'regions.json'), 'w') as f:
+        json.dump(annotations, f)
 
 
 if __name__ == '__main__':

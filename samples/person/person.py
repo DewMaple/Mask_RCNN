@@ -8,8 +8,6 @@ import skimage.draw
 # Root directory of the project
 import skimage.io
 
-import model as modellib
-
 ROOT_DIR = os.getcwd()
 if ROOT_DIR.endswith("samples/person"):
     # Go up two levels to the repo root
@@ -18,6 +16,7 @@ if ROOT_DIR.endswith("samples/person"):
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)
 from config import Config
+import model as modellib
 import utils
 
 # Path to trained weights file
@@ -63,12 +62,13 @@ class PersonDataset(utils.Dataset):
         self.add_class('person', 1, "person")
         assert subset in ["train", "val"]
         dataset_dir = os.path.join(dataset_dir, subset)
-        annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-        annotations = list(annotations.values())
+        annotations = json.load(open(os.path.join(dataset_dir, "regions.json")))
         annotations = [a for a in annotations if a['regions']]
-        for a in annotations:
+        print('ann length: {} '.format(len(annotations)))
+        for i, a in enumerate(annotations):
             polygons = [r['shape_attributes'] for r in a['regions'].values()]
             image_path = os.path.join(dataset_dir, a['filename'])
+            print('{}th image: {}'.format(i, image_path))
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
 
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train Mask R-CNN to detect balloons.')
     parser.add_argument("command", metavar="<command>", help="'train' or 'splash'")
     parser.add_argument('--dataset', required=False, metavar="/path/to/person/dataset/",
-                        help='Directory of the Balloon dataset')
+                        help='Directory of the Person dataset')
     parser.add_argument('--weights', required=True, metavar="/path/to/weights.h5",
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False, default=DEFAULT_LOGS_DIR, metavar="/path/to/logs/",
