@@ -11,8 +11,8 @@ pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
 def download_person_dataset(dataset_dir=".", year=2017):
-    # download(dataset_dir, 'train', year, ['person'])
-    download(dataset_dir, 'val', year, ['person'])
+    download(dataset_dir, 'train', year, ['person'])
+    # download(dataset_dir, 'val', year, ['person'])
 
 
 def copy_files(coco, image_ids, src_dir, tar_dir):
@@ -82,7 +82,6 @@ def _shape_coco_2_vgg(ann, coco):
     #   'size': 100202
     # }
     segs = ann['segmentation']
-    print(ann)
 
     regions = {}
     import numpy as np
@@ -102,13 +101,37 @@ def _shape_coco_2_vgg(ann, coco):
             }
         }
 
-    img_id = ann['image_id']
-    img = coco.loadImgs(img_id)[0]
+    img_ids = ann['image_id']
+    img = coco.loadImgs(img_ids)[0]
     return {
         'filename': img['file_name'],
         'regions': regions,
         'size': img['height'] * img['width']
     }
+
+
+def _merge(a1, a2):
+    l1 = len(a1['regions'])
+    l2 = len(a2['regions'])
+    for i in range(l2):
+        a1['regions'][i + l1] = a2['regions'][i]
+
+    return a1
+
+
+def _merge_by_filename(anns):
+    if len(anns) < 2:
+        return anns
+    annotations = sorted(anns, key=lambda c: c['filename'])
+    ann_list = []
+    pre = annotations[0]
+    for a in annotations[1:]:
+        if pre['filename'] == a['filename']:
+            pre = _merge(pre, a)
+        else:
+            ann_list.append(pre)
+            pre = a
+    return ann_list
 
 
 def create_annotation(coco, image_ids, tar_dir, cat_ids):
@@ -120,6 +143,7 @@ def create_annotation(coco, image_ids, tar_dir, cat_ids):
     for ann in anns:
         annotations.append(_shape_coco_2_vgg(ann, coco))
 
+    annotations = _merge_by_filename(annotations)
     with open(os.path.join(tar_dir, 'regions.json'), 'w') as f:
         json.dump(annotations, f)
 

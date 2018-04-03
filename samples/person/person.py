@@ -9,6 +9,8 @@ import skimage.draw
 import skimage.io
 from img_utils.files import images_in_dir
 
+import visualize
+
 ROOT_DIR = os.getcwd()
 if ROOT_DIR.endswith("samples/person"):
     # Go up two levels to the repo root
@@ -48,7 +50,7 @@ class PersonConfig(Config):
     NUM_CLASSES = 1 + 1  # Background + baloon
 
     # Number of training steps per epoch
-    STEPS_PER_EPOCH = 100
+    STEPS_PER_EPOCH = 3
 
     # Skip detections with < 90% confidence
     DETECTION_MIN_CONFIDENCE = 0.9
@@ -98,6 +100,15 @@ class PersonDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
+def visual_model(dataset_train):
+    image_ids = np.random.choice(dataset_train.image_ids, 20)
+    print(len(dataset_train.image_ids))
+    for image_id in image_ids:
+        image = dataset_train.load_image(image_id)
+        mask, class_ids = dataset_train.load_mask(image_id)
+        visualize.display_top_masks(image, mask, class_ids, dataset_train.class_names)
+
+
 def train(model):
     dataset_train = PersonDataset()
     dataset_train.load_person(args.dataset, "train")
@@ -108,7 +119,7 @@ def train(model):
     dataset_val.load_person(args.dataset, "val")
     dataset_val.prepare()
     print("Training network heads")
-    model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=30, layers='heads')
+    model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=1, layers='heads')
 
 
 def color_splash(image, mask):
