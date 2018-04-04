@@ -11,8 +11,8 @@ pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
 def download_person_dataset(dataset_dir=".", year=2017):
+    # download(dataset_dir, 'train', year, ['person'])
     download(dataset_dir, 'train', year, ['person'])
-    # download(dataset_dir, 'val', year, ['person'])
 
 
 def copy_files(coco, image_ids, src_dir, tar_dir):
@@ -37,15 +37,28 @@ def download_from_coco(coco, image_ids, tar_dir):
 
 def multi_thread_downloader(coco, image_ids, tar_dir, threads_num=1):
     class CocoDownloader(threading.Thread):
-        def __init__(self, coco, image_ids, tar_dir, thread_id):
+        def __init__(self, img_ids, thread_id):
             threading.Thread.__init__(self)
-            self.coco = coco
-            self.image_ids = image_ids
-            self.tar_dir = tar_dir
+            self.img_ids = img_ids
             self.thread_id = thread_id
 
         def run(self):
             print("Thread {} is running".format(self.thread_id))
+            download_from_coco(coco, self.img_ids, tar_dir)
+            print("Downloader[{}] downloaded {} images. ".format(self.thread_id, len(self.img_ids)))
+
+    if threads_num == 1:
+        download_from_coco(coco, image_ids, tar_dir)
+    else:
+        img_len = len(image_ids)
+        batch_size = img_len // threads_num
+        batch_size = batch_size if img_len % threads_num == 0 else batch_size + 1
+
+        for i in range(threads_num):
+            start = i * batch_size
+            end = min(start + batch_size, img_len)
+            coco_downloader = CocoDownloader(image_ids[start:end], i + 1)
+            coco_downloader.start()
 
 
 def download(data_dir, subset, year, cat_nms):
@@ -61,10 +74,11 @@ def download(data_dir, subset, year, cat_nms):
 
     print('save dataset to {}.'.format(subset_dir))
 
-    copy_files(coco, img_ids[:100], subset_dir, 'dataset/person/' + subset)
-    create_annotation(coco, img_ids[:100], 'dataset/person/' + subset, cat_ids=cat_ids)
+    # copy_files(coco, img_ids[:100], subset_dir, 'dataset/person/' + subset)
+    # create_annotation(coco, img_ids[:100], 'dataset/person/' + subset, cat_ids=cat_ids)
     # download_from_coco(coco, image_ids=img_ids, tar_dir=subset_dir)
-    # create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir, cat_ids=cat_ids)
+    multi_thread_downloader(coco, image_ids=img_ids, tar_dir=subset_dir,threads_num=1)
+    create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir, cat_ids=cat_ids)
 
 
 def _shape_coco_2_vgg(ann, coco):
@@ -146,6 +160,7 @@ def create_annotation(coco, image_ids, tar_dir, cat_ids):
     annotations = _merge_by_filename(annotations)
     with open(os.path.join(tar_dir, 'regions.json'), 'w') as f:
         json.dump(annotations, f)
+    print("Annotation length is {}".format(len(annotations)))
 
 
 if __name__ == '__main__':

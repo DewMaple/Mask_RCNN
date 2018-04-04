@@ -1,9 +1,10 @@
 .ipynb_checkpoints/
 __pycache__/
-mask_rcnn_coco.h5
-mask_rcnn_balloon.h5
+*.h5
 .idea/
 output/
+output1/
 samples/person/coco/*/
 dataset/
 logs/
+/samples/person/coco/dataset.tar.gz

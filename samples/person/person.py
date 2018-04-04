@@ -47,7 +47,7 @@ class PersonConfig(Config):
     IMAGES_PER_GPU = 2
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + baloon
+    NUM_CLASSES = 1 + 1  # Background + person
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 3
@@ -89,7 +89,6 @@ class PersonDataset(utils.Dataset):
         for i, p in enumerate(info["polygons"]):
             rr, cc = skimage.draw.polygon(p['all_points_y'], p['all_points_x'])
             mask[rr, cc, i] = 1
-
         return mask, np.ones([mask.shape[-1]], dtype=np.int32)
 
     def image_reference(self, image_id):
@@ -101,7 +100,7 @@ class PersonDataset(utils.Dataset):
 
 
 def visual_model(dataset_train):
-    image_ids = np.random.choice(dataset_train.image_ids, 20)
+    image_ids = np.random.choice(dataset_train.image_ids, 50)
     print(len(dataset_train.image_ids))
     for image_id in image_ids:
         image = dataset_train.load_image(image_id)
@@ -113,13 +112,14 @@ def train(model):
     dataset_train = PersonDataset()
     dataset_train.load_person(args.dataset, "train")
     dataset_train.prepare()
+    visual_model(dataset_train)
 
     # Validation dataset
     dataset_val = PersonDataset()
     dataset_val.load_person(args.dataset, "val")
     dataset_val.prepare()
     print("Training network heads")
-    model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=1, layers='heads')
+    # model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=1, layers='heads')
 
 
 def color_splash(image, mask):
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     import argparse
 
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description='Train Mask R-CNN to detect balloons.')
+    parser = argparse.ArgumentParser(description='Train Mask R-CNN to detect person.')
     parser.add_argument("command", metavar="<command>", help="'train' or 'splash' or 'valid' ")
     parser.add_argument('--dataset', required=False, metavar="/path/to/person/dataset/",
                         help='Directory of the Person dataset')
