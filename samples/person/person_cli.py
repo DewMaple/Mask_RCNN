@@ -25,7 +25,8 @@ if ROOT_DIR.endswith("samples/person"):
 sys.path.append(ROOT_DIR)
 
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+# COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_WEIGHTS_PATH = '/Users/administrator/workspace/AI_models/mask_rcnn/mask_rcnn_coco.h5'
 
 
 def validate_images(image_dir, subset='train'):
@@ -120,7 +121,7 @@ if __name__ == '__main__':
     parser.add_argument("command", metavar="<command>", help="'train' or 'splash' or 'validate' or 'display' ")
     parser.add_argument('--dataset', required=False, metavar="/path/to/person/dataset/",
                         help='Directory of the Person dataset')
-    parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5",
+    parser.add_argument('--weights', required=False, metavar="/path/to/weights.h5", default='coco',
                         help="Path to weights .h5 file or 'coco'")
     parser.add_argument('--logs', required=False, default=DEFAULT_LOGS_DIR, metavar="/path/to/logs/",
                         help='Logs and checkpoints directory (default=logs/)')
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         model = modellib.MaskRCNN(mode="training", config=config, model_dir=args.logs)
     else:
         model = modellib.MaskRCNN(mode="inference", config=config, model_dir=args.logs)
-
+    model.keras_model.summary()
     # Select weights file to load
     if args.weights.lower() == "coco":
         weights_path = COCO_WEIGHTS_PATH

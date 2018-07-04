@@ -9,3 +9,4 @@ dataset/
 logs/
 /samples/person/coco/dataset.tar.gz
 output_huatuo/
+samples/person/coco_2014/

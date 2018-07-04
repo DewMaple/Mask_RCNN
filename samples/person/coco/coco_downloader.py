@@ -10,7 +10,7 @@ from pycocotools.coco import COCO
 pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
-def download_person_dataset(dataset_dir=".", year=2017):
+def download_person_dataset(dataset_dir=".", year=2018):
     # download(dataset_dir, 'train', year, ['person'])
     download(dataset_dir, 'train', year, ['person'])
 
@@ -164,4 +164,4 @@ def create_annotation(coco, image_ids, tar_dir, cat_ids):
 
 
 if __name__ == '__main__':
-    download_person_dataset('/Users/administrator/workspace/Mask_RCNN/samples/person/coco', 2017)
+    download_person_dataset('/Users/administrator/workspace/Mask_RCNN/samples/person/coco_2014', 2014)

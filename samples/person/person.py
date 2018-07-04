@@ -23,7 +23,8 @@ import model as modellib
 import utils
 
 # Path to trained weights file
-COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+# COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_WEIGHTS_PATH = '/Users/administrator/workspace/AI_models/mask_rcnn/mask_rcnn_coco.h5'
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
@@ -112,7 +113,7 @@ def train(model):
     dataset_train = PersonDataset()
     dataset_train.load_person(args.dataset, "train")
     dataset_train.prepare()
-    # visual_model(dataset_train)
+    visual_model(dataset_train)
 
     # Validation dataset
     dataset_val = PersonDataset()
