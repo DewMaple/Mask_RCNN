@@ -112,14 +112,29 @@ def train(model):
     dataset_train = PersonDataset()
     dataset_train.load_person(args.dataset, "train")
     dataset_train.prepare()
-    visual_model(dataset_train)
+    # visual_model(dataset_train)
 
     # Validation dataset
     dataset_val = PersonDataset()
     dataset_val.load_person(args.dataset, "val")
     dataset_val.prepare()
-    print("Training network heads")
+    # print("Training network heads")
     # model.train(dataset_train, dataset_val, learning_rate=config.LEARNING_RATE, epochs=1, layers='heads')
+
+    # Training - Stage 2
+    # Finetune layers from ResNet stage 4 and up
+    print("Fine tune Resnet stage 4 and up")
+    model.train(dataset_train, dataset_val,
+                    learning_rate=config.LEARNING_RATE,
+                    epochs=5,
+                    layers='4+')
+    # Training - Stage 3
+    # Fine tune all layers
+    print("Fine tune all layers")
+    model.train(dataset_train, dataset_val,
+                    learning_rate=config.LEARNING_RATE / 10,
+                    epochs=5,
+                    layers='all')
 
 
 def color_splash(image, mask):

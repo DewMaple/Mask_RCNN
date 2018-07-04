@@ -1,21 +1,21 @@
 import colorsys
 import glob
+import os
+import random
 import time
 
 import cv2
 import numpy as np
-import os
-import random
 
-import coco
 import model as modellib
 import utils
-from samples.person.person import PersonConfig
+from coco import CocoConfig
+# from samples.person.person import PersonConfig
 
-OUTPUT_DIR = "output1"
+OUTPUT_DIR = "output_huatuo"
 
 
-class InferenceConfig(PersonConfig):
+class InferenceConfig(CocoConfig):
     # Set batch size to 1 since we'll be running inference on
     # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
     GPU_COUNT = 1
@@ -101,13 +101,17 @@ ROOT_DIR = os.getcwd()
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 # Local path to trained weights file
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_person_0080.h5")
+# COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_person_0148.h5")
+# COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_MODEL_PATH = '/Users/administrator/workspace/AI_models/mask_rcnn/mask_rcnn_coco.h5'
 # Download COCO trained weights from Releases if needed
 if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 
 # Directory of images to run detection on
-IMAGE_DIR = "/Users/administrator/Documents/video/out/images"
+# IMAGE_DIR = "/Users/administrator/Documents/video/out/images"
+IMAGE_DIR = "/Users/administrator/Documents/video/huatuo/math_2018-04-25/test_images"
+# IMAGE_DIR = "/Users/administrator/workspace/Mask_RCNN/samples/person/coco/val"
 
 model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 model.load_weights(COCO_MODEL_PATH, by_name=True)

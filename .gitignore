@@ -8,3 +8,4 @@ samples/person/coco/*/
 dataset/
 logs/
 /samples/person/coco/dataset.tar.gz
+output_huatuo/
