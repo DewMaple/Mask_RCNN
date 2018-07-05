@@ -1,8 +1,9 @@
 import json
 import os
 import shutil
-import threading
 import time
+from itertools import repeat
+from multiprocessing.pool import Pool
 
 import pylab
 from pycocotools.coco import COCO
@@ -10,9 +11,9 @@ from pycocotools.coco import COCO
 pylab.rcParams['figure.figsize'] = (8.0, 10.0)
 
 
-def download_person_dataset(dataset_dir=".", year=2018):
-    # download(dataset_dir, 'train', year, ['person'])
+def download_person_dataset(dataset_dir=".", year=2017):
     download(dataset_dir, 'train', year, ['person'])
+    # download(dataset_dir, 'train', year, ['person'])
 
 
 def copy_files(coco, image_ids, src_dir, tar_dir):
@@ -36,17 +37,6 @@ def download_from_coco(coco, image_ids, tar_dir):
 
 
 def multi_thread_downloader(coco, image_ids, tar_dir, threads_num=1):
-    class CocoDownloader(threading.Thread):
-        def __init__(self, img_ids, thread_id):
-            threading.Thread.__init__(self)
-            self.img_ids = img_ids
-            self.thread_id = thread_id
-
-        def run(self):
-            print("Thread {} is running".format(self.thread_id))
-            download_from_coco(coco, self.img_ids, tar_dir)
-            print("Downloader[{}] downloaded {} images. ".format(self.thread_id, len(self.img_ids)))
-
     if threads_num == 1:
         download_from_coco(coco, image_ids, tar_dir)
     else:
@@ -54,11 +44,14 @@ def multi_thread_downloader(coco, image_ids, tar_dir, threads_num=1):
         batch_size = img_len // threads_num
         batch_size = batch_size if img_len % threads_num == 0 else batch_size + 1
 
+        pool = Pool(threads_num)
+        args = []
         for i in range(threads_num):
             start = i * batch_size
             end = min(start + batch_size, img_len)
-            coco_downloader = CocoDownloader(image_ids[start:end], i + 1)
-            coco_downloader.start()
+            args.append(image_ids[start:end])
+
+        pool.starmap(download_from_coco, zip(repeat(coco), args, repeat(tar_dir)))
 
 
 def download(data_dir, subset, year, cat_nms):
@@ -77,7 +70,7 @@ def download(data_dir, subset, year, cat_nms):
     # copy_files(coco, img_ids[:100], subset_dir, 'dataset/person/' + subset)
     # create_annotation(coco, img_ids[:100], 'dataset/person/' + subset, cat_ids=cat_ids)
     # download_from_coco(coco, image_ids=img_ids, tar_dir=subset_dir)
-    multi_thread_downloader(coco, image_ids=img_ids, tar_dir=subset_dir,threads_num=1)
+    multi_thread_downloader(coco, image_ids=img_ids, tar_dir=subset_dir, threads_num=4)
     create_annotation(coco, image_ids=img_ids, tar_dir=subset_dir, cat_ids=cat_ids)
 
 
@@ -120,7 +113,9 @@ def _shape_coco_2_vgg(ann, coco):
     return {
         'filename': img['file_name'],
         'regions': regions,
-        'size': img['height'] * img['width']
+        'size': img['height'] * img['width'],
+        'height': img['height'],
+        'width': img['width']
     }
 
 
@@ -164,4 +159,4 @@ def create_annotation(coco, image_ids, tar_dir, cat_ids):
 
 
 if __name__ == '__main__':
-    download_person_dataset('/Users/administrator/workspace/Mask_RCNN/samples/person/coco_2014', 2014)
+    download_person_dataset('/Users/administrator/workspace/Mask_RCNN/dataset/person', 2017)

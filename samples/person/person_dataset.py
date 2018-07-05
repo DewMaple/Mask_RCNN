@@ -22,8 +22,7 @@ class PersonDataset(utils.Dataset):
             polygons = [r['shape_attributes'] for r in a['regions'].values()]
             image_path = os.path.join(dataset_dir, a['filename'])
 
-            image = skimage.io.imread(image_path)
-            height, width = image.shape[:2]
+            height, width = a['height'], a['width']
 
             self.add_image(source, image_id=a['filename'], path=image_path, width=width, height=height,
                            polygons=polygons)

@@ -476,7 +476,7 @@ if __name__ == '__main__':
         dataset_train.load_coco(args.dataset, "train", year=args.year, auto_download=args.download)
         dataset_train.load_coco(args.dataset, "valminusminival", year=args.year, auto_download=args.download)
         dataset_train.prepare()
-
+        print('load training data DONE!!!!!')
         # Validation dataset
         dataset_val = CocoDataset()
         dataset_val.load_coco(args.dataset, "minival", year=args.year, auto_download=args.download)
